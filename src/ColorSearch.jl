@@ -21,6 +21,8 @@ closecolors(colorname)
 Sort the `color-names` dataset for colors closest to `colorname`
 """
 function closecolors(color::String)
+    #make lowercase so we're case-insensitive
+    color = lowercase(color)
     colorrow = filter(allcolors) do row
         row.name == color
     end
