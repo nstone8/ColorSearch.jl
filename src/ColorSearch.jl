@@ -1,18 +1,45 @@
 module ColorSearch
 
-using DataFrames, FileIO, CSVFiles, Colors, Plots
+using DataFrames, FileIO, CSVFiles, Colors, Plots, Scratch
+import Downloads
 
-export closecolors, listcolors, showcolor
+export closecolors, listcolors, showcolor, updatecolors!
+
+datadir = @get_scratch!("colordata")
+datafile = joinpath(datadir,"colors.csv")
+
+function downloadcolors()
+    Downloads.download("https://raw.githubusercontent.com/meodai/color-names/refs/heads/master/dist/colornames.csv",
+                       datafile)
+end
 
 function loadcolors()
-    datapath = joinpath(dirname(@__FILE__) |> dirname, "data","colornames.csv")
-    dataset = load(datapath) |> DataFrame
+    if !isfile(datafile)
+        downloadcolors()
+    end
+    dataset = load(datafile) |> DataFrame
     transform!(dataset,:hex => ByRow((x) -> parse(Colorant, x)) => :colorant)
     dataset[!,:name] = lowercase.(dataset.name)
     return dataset
 end
 
-allcolors = loadcolors()
+allcolors::DataFrame = loadcolors()
+
+"""
+```julia
+updatecolors!()
+```
+Update the list of color names from the `github.com/meodai/color-names` repository
+"""
+function updatecolors!()
+    #get the new colors
+    downloadcolors()
+    #load them
+    newcolors = loadcolors()
+    #replace our global valuse
+    global allcolors = newcolors
+    return nothing
+end
 
 """
 ```julia
